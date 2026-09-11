@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Modillion">
+<meta name="theme-color" content="#4e8a3e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Modillion Field Report</title>
+<style>
+  :root {
+    --green: #4e8a3e; --green-dark: #3d6f30; --grey: #808080; --light: #f2f2f2;
+    --border: #cfcfcf; --text: #222; --muted: #666; --red: #b3261e; --blue: #2a6fdb;
+    --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root { --bg: #e9ebe6; --card: #fff; --nav: #fff; --tilebg: #dfe3dc; --input: #fff; }
+  html.dark { --bg: #15171a; --card: #22262b; --nav: #1b1e22; --tilebg: #2c3136; --input: #1b1e22; --text: #e8e8e8; --muted: #9aa; --border: #3a4046; --light: #2c3136; }
+  html.dark .tile { background: var(--tilebg); border-color: #566; }
+  html.dark .item { background: var(--card); } html.dark .item .th div { background: #333a40; }
+  html.dark .zoneband { background: #2f3a2c; } html.dark .chip { background: var(--card); } html.dark .chip.on { background: var(--green); }
+  html.dark .overlay .box { background: var(--card); } html.dark .tile .tools button, html.dark .tile .tools label { background: rgba(40,44,48,.92); }
+  html.dark .tile .tools svg { stroke: #eee; } html.dark .cphoto img { background: #333; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 17px/1.35 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overscroll-behavior: none; }
+  body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  header { background: var(--green); color: #fff; padding: calc(var(--safe-t) + 8px) 14px 8px; display: flex;
+    align-items: center; gap: 10px; flex: none; }
+  header h1 { font-size: 18px; margin: 0; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header .pos { font-size: 14px; opacity: .9; }
+  main { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px calc(var(--safe-b) + 12px); }
+  .screen { display: none; max-width: 980px; margin: 0 auto; }
+  .screen.active { display: block; }
+  nav { flex: none; display: flex; background: var(--nav); border-top: 1px solid var(--border); padding-bottom: var(--safe-b); }
+  nav button { flex: 1; border: 0; background: none; padding: 10px 4px 8px; font-size: 13px; color: var(--muted); display: flex;
+    flex-direction: column; align-items: center; gap: 3px; }
+  nav button svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  nav button.active { color: var(--green); font-weight: 600; }
+  .card { background: var(--card); border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  label.f { font-size: 13px; color: var(--muted); display: block; margin: 8px 0 4px; }
+  input[type=text], input[type=number], textarea, select { font: inherit; font-size: 17px; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 8px; width: 100%; background: var(--input); color: var(--text); }
+  textarea { resize: vertical; min-height: 84px; }
+  input.short { width: 96px; text-align: center; font-size: 22px; font-weight: 600; padding: 8px; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; cursor:pointer; text-align:center; font: inherit; font-size: 17px; padding: 12px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--card);
+    color: var(--text); min-height: 48px; }
+  .btn.primary { background: var(--green); color: #fff; border-color: var(--green); font-weight: 600; }
+  .btn.danger { color: var(--red); }
+  .btn.wide { width: 100%; }
+  .btn:disabled { opacity: .45; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 560px) { .tiles { grid-template-columns: 1fr 1fr; } }
+  .tile { position: relative; aspect-ratio: 4/3; border-radius: 12px; overflow: hidden; background: #dfe3dc; border: 2px dashed #9aa; }
+  .tile.filled { border: 2px solid var(--green); }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tile .lbl { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.55); color: #fff; font-size: 13px; font-weight: 600;
+    padding: 3px 8px; border-radius: 6px; }
+  .tile .tap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    color: #456; font-size: 15px; font-weight: 600; }
+  .tile .tap svg { width: 44px; height: 44px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .tile input[type=file] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; font-size: 0; }
+  .tile .tools { position: absolute; right: 6px; bottom: 6px; display: flex; gap: 6px; }
+  .tile .tools button, .tile .tools label { background: rgba(255,255,255,.92); border: 0; border-radius: 8px; width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .tile .tools svg { width: 22px; height: 22px; stroke: #222; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 10px; }
+  .chip { border: 1px solid var(--border); border-radius: 20px; padding: 8px 14px; font-size: 15px; background: var(--card); color: var(--text); min-height: 40px; }
+  .chip.on { background: var(--green); color: #fff; border-color: var(--green); }
+  .cphoto { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+  .cphoto img { width: 84px; height: 63px; object-fit: cover; border-radius: 8px; flex: none; }
+  .cphoto .tag { font-weight: 700; width: 26px; flex: none; }
+  .cphoto input { flex: 1; }
+  .cphoto button { flex: none; }
+  .navbtns { display: flex; gap: 10px; margin-top: 4px; }
+  .navbtns .btn { flex: 1; font-size: 19px; min-height: 56px; }
+  .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .item { background: var(--card); border-radius: 10px; overflow: hidden; border: 2px solid transparent; }
+  .item.cur { border-color: var(--green); }
+  .item .th { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; background: #ddd; aspect-ratio: 3/0.75; }
+  .item .th div { background: #cfd3cb; }
+  .item .th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .item .t { padding: 6px 8px; font-size: 14px; }
+  .item .t b { display: block; }
+  .item .t .warn { color: var(--red); }
+  .zoneband { background: #cfd8cb; padding: 6px 10px; border-radius: 8px; font-weight: 600; margin: 12px 0 8px; grid-column: 1/-1; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .prog { height: 8px; background: #ddd; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+  .prog div { height: 100%; background: var(--green); width: 0; transition: width .2s; }
+  .toast { position: fixed; left: 50%; bottom: calc(var(--safe-b) + 70px); transform: translateX(-50%); background: #222; color: #fff;
+    padding: 10px 16px; border-radius: 10px; font-size: 15px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 9; max-width: 90vw; }
+  .toast.show { opacity: .95; }
+  h2 { font-size: 20px; margin: 4px 0 10px; }
+  h3 { font-size: 16px; margin: 12px 0 6px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+  details summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+  .zonecard input[type=file] { display: none; }
+  .zoneimg { max-width: 100%; max-height: 200px; border-radius: 8px; display: block; margin-top: 8px; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 20; }
+  .overlay.show { display: flex; }
+  .overlay .box { background: #fff; border-radius: 14px; padding: 20px; width: min(92vw, 420px); }
+  .kbd { font-size: 13px; color: var(--muted); }
+  .dupwarn { background: #fff3cd; color: #7a4b00; border: 1px solid #ffe08a; border-radius: 8px; padding: 8px 12px; margin-top: 8px; font-size: 15px; display: none; }
+  html.dark .dupwarn { background: #4a3a10; color: #ffd76a; border-color: #6b5520; }
+  .backup { font-size: 13px; color: var(--muted); margin: 10px 0 4px; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="hdrTitle">Modillion Field Report</h1>
+  <span class="pos" id="hdrPos"></span>
+</header>
+
+<main>
+<!-- ============================ CAPTURE ============================ -->
+<section class="screen active" id="scr-capture">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <div><label class="f" style="margin-top:0">Zone</label><input class="short" type="text" inputmode="numeric" id="zone"></div>
+        <div><label class="f" style="margin-top:0"><span id="elName">Modillion</span> #</label><input class="short" type="text" inputmode="numeric" id="num"></div>
+      </div>
+      <div class="muted" id="posText"></div>
+    </div>
+    <div class="dupwarn" id="dupWarn"></div>
+  </div>
+
+  <div class="card">
+    <div class="tiles" id="tiles"></div>
+    <div class="row" style="margin-top:10px">
+      <label class="btn" style="position:relative;overflow:hidden">Pick photos from library (in order)
+        <input type="file" accept="image/*" multiple id="batchLib" style="position:absolute;inset:0;opacity:0;font-size:0"></label>
+      <span class="kbd" id="batchHint"></span>
+    </div>
+    <p class="kbd" style="margin:8px 0 0">Tap a tile to open the camera. Retake = tap it again. The small buttons rotate, pick a single photo from the library, or remove.</p>
+  </div>
+
+  <div class="card">
+    <label class="f" style="margin-top:0">Quick-pick defects (tap to add the standard wording to the notes)</label>
+    <div class="chips" id="chips"></div>
+    <label class="f">Notes (box to the right of the Front photo)</label>
+    <textarea id="notes" placeholder="Tap the mic on the keyboard to dictate"></textarea>
+  </div>
+
+  <div class="card">
+    <label class="f" style="margin-top:0">Comments (bottom area) - optional text and/or extra photos</label>
+    <textarea id="ctext" style="min-height:60px"></textarea>
+    <div id="cphotos"></div>
+    <div class="row" style="margin-top:10px">
+      <label class="btn" style="position:relative;overflow:hidden;display:inline-block">Add comment photo (camera)
+        <input type="file" accept="image/*" capture="environment" id="cphotoCam" style="position:absolute;inset:0;opacity:0;font-size:0"></label>
+      <label class="btn" style="position:relative;overflow:hidden;display:inline-block">From library
+        <input type="file" accept="image/*" multiple id="cphotoLib" style="position:absolute;inset:0;opacity:0;font-size:0"></label>
+    </div>
+  </div>
+
+  <div class="navbtns">
+    <button class="btn" id="btnPrev">&lsaquo; Prev</button>
+    <button class="btn danger" id="btnDelete" style="flex:0 0 auto">Delete</button>
+    <button class="btn primary" id="btnNext">Next &rsaquo;</button>
+  </div>
+  <div class="backup" id="backupLine"></div>
+</section>
+
+<!-- ============================ LIST ============================ -->
+<section class="screen" id="scr-list">
+  <div class="row" style="justify-content:space-between;margin-bottom:10px">
+    <h2 style="margin:0">All <span class="elNamePl">modillions</span></h2>
+    <span class="muted" id="listSummary"></span>
+  </div>
+  <div class="list" id="list"></div>
+</section>
+
+<!-- ============================ ZONES ============================ -->
+<section class="screen" id="scr-zones">
+  <h2>Zone introductions</h2>
+  <p class="muted">Each zone gets a heading page before its <span class="elNamePl">modillions</span>: an intro sentence and, optionally, the elevation / layout drawing.</p>
+  <div id="zonesList"></div>
+</section>
+
+<!-- ============================ EXPORT ============================ -->
+<section class="screen" id="scr-export">
+  <h2>Report</h2>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1"><label class="f" style="margin-top:0">What to include</label>
+        <select id="genScope"><option value="all">Whole report (all zones)</option></select></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="btnGen">Generate Word document</button>
+      <span class="muted">Keep the app open on screen while it builds - iOS pauses it in the background.</span>
+    </div>
+    <div id="genProg" style="display:none"><div class="prog"><div id="genBar"></div></div><div class="muted" id="genMsg"></div></div>
+    <div id="genResult" style="display:none;margin-top:12px">
+      <div class="muted" id="genInfo"></div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn primary" id="btnShare">Share / Save to Files...</button>
+        <button class="btn" id="btnDownload">Download</button>
+      </div>
+      <p class="muted" style="margin-bottom:0">"Share / Save to Files" opens the iOS share sheet: choose <b>Save to Files</b> and pick <i>On My iPad</i> (fast, local) or <i>OneDrive</i>, or send it by mail/Teams. "Download" puts it in Files &rsaquo; Downloads.</p>
+    </div>
+  </div>
+
+  <h2>Project backup / transfer</h2>
+  <div class="card">
+    <p class="muted" style="margin-top:0">A zip with all photos and a <code>project.json</code>. Opens directly in the desktop Modillion Report Builder, and can be imported on another iPad to merge several people's zones into one report.</p>
+    <div class="row">
+      <button class="btn" id="btnExportZip">Export project zip</button>
+      <label class="btn" style="position:relative;overflow:hidden;display:inline-block">Import zip (merge)
+        <input type="file" accept=".zip,application/zip" id="importZip" style="position:absolute;inset:0;opacity:0;font-size:0"></label>
+    </div>
+    <div id="zipProg" style="display:none"><div class="prog"><div id="zipBar"></div></div><div class="muted" id="zipMsg"></div></div>
+    <div class="muted" id="storageInfo" style="margin-top:10px"></div>
+  </div>
+
+  <h2>Danger zone</h2>
+  <div class="card">
+    <button class="btn danger" id="btnClear">Start a new project (erase everything on this iPad)</button>
+  </div>
+</section>
+
+<!-- ============================ SETTINGS ============================ -->
+<section class="screen" id="scr-settings">
+  <h2>Settings</h2>
+  <div class="card" id="settingsForm">
+    <label class="f" style="margin-top:0">Project / building name (used for file names)</label><input type="text" data-s="project_name">
+    <label class="f">Your name or initials (stamped on exports and on each modillion you capture)</label><input type="text" data-s="operator">
+    <label class="f"><input type="checkbox" data-s="dark_mode"> Dark mode (easier on the eyes at night)</label>
+    <label class="f">Footer text (e.g. Report C15010 - April 2015)</label><input type="text" data-s="report_id">
+    <label class="f">Element name (Modillion)</label><input type="text" data-s="element_name">
+    <label class="f">Order of the capture tiles on screen (LFR = Left, Front, Right; does not change the report layout)</label><input type="text" data-s="photo_order" style="width:120px;text-transform:uppercase">
+    <div class="row">
+      <div style="flex:1"><label class="f">Section number for zone headings (3 &rarr; "3.1 Zone 1:")</label><input type="text" data-s="section_number"></div>
+      <div style="flex:1"><label class="f">First figure number</label><input type="number" data-s="figure_start"></div>
+      <div style="flex:1"><label class="f">Page no. of the first zone heading in the final report</label><input type="number" data-s="page_start"></div>
+    </div>
+    <label class="f"><input type="checkbox" data-s="include_summary"> Include "Summary of major defects by zone" table at the start</label>
+    <details style="margin-top:10px"><summary>Photo size &amp; quality</summary>
+      <div class="row">
+        <div style="flex:1"><label class="f">Stored photo size (px, long edge)</label><input type="number" data-s="store_px"></div>
+        <div style="flex:1"><label class="f">Photo size in the Word file (px)</label><input type="number" data-s="report_px"></div>
+        <div style="flex:1"><label class="f">JPEG quality (0.5 - 0.95)</label><input type="number" step="0.05" data-s="jpeg_quality"></div>
+      </div>
+      <p class="muted">1200 px at quality 0.8 is about 200 KB per photo (~60 MB for 100 <span class="elNamePl">modillions</span>). Lower the Word size or generate one zone at a time if files get too big for OneDrive.</p>
+    </details>
+    <details style="margin-top:10px"><summary>Quick-pick defects</summary>
+      <p class="muted">One per line: <code>Button label | Sentence inserted into the notes</code>. The label is what appears in the summary table.</p>
+      <textarea data-s="defects" style="min-height:220px;font-size:15px"></textarea>
+    </details>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="btnSaveSettings">Save settings</button></div>
+  </div>
+  <p class="muted">Modillion Field Report v<span id="ver"></span>. Everything is stored on this iPad only; export a project zip regularly as a backup.</p>
+</section>
+</main>
+
+<nav>
+  <button data-scr="capture" class="active"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Capture</button>
+  <button data-scr="list"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>List</button>
+  <button data-scr="zones"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 20V9l7-5 7 5v11"/><path d="M9 20v-6h6v6"/></svg>Zones</button>
+  <button data-scr="export"><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></svg>Report</button>
+  <button data-scr="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+<div class="overlay" id="overlay"><div class="box" id="overlayBox"></div></div>
+
+<script>
+"use strict";
+const VERSION = "1.3.0";
+document.getElementById("ver").textContent = VERSION;
+
+/* ======================================================================
+   Defaults
+   ====================================================================== */
+const DEFAULT_DEFECTS = [
+  "Hairline crack (mortar joint) | Hairline crack visible at the mortar joints of modillion.",
+  "Hairline crack (soffit / face) | Hairline cracks at soffit/recess/front face/entablature.",
+  "Open joint | Open joint.",
+  "Corrosion stains | Corrosion stains.",
+  "Masonry stains | Masonry stains.",
+  "Bio-growth | Bio-growth formation.",
+  "Exposed anode | Exposed anode visible from the front face of modillion.",
+  "Cintec anchor | Cintec anchor: corrosion stains and coating peeling off.",
+  "Continuity wire | Continuity wire sticking out from mortar joint.",
+  "Terra cotta damage | Visible damage on the terra cotta including failure of repair, spalling.",
+].join("\n");
+
+const DEFAULT_SETTINGS = {
+  project_name: "Modillion Report",
+  report_id: "Report C00000 - Month Year",
+  element_name: "Modillion",
+  section_number: "3",
+  figure_start: 1,
+  page_start: 1,
+  include_summary: true,
+  store_px: 1600,
+  report_px: 1200,
+  jpeg_quality: 0.8,
+  defects: DEFAULT_DEFECTS,
+  photo_w_in: 3.0, photo_h_in: 2.0, comment_photo_w_in: 3.0,
+  operator: "",
+  dark_mode: false,
+  photo_order: "LFR",   // order of the capture tiles on screen (Left, Front, Right feels natural on the iPad)
+  report_layout: "LRF", // page layout, fixed to match the reference report: Left+Right top row, Front beside the notes
+};
+const SLOT_BY_LETTER = { L: ["left", "Left"], R: ["right", "Right"], F: ["front", "Front"] };
+function slotOrder(which = "photo_order") {
+  const o = String(project.settings[which] || "LRF").toUpperCase().replace(/[^LRF]/g, "");
+  const seen = []; for (const ch of o + "LRF") if (!seen.includes(ch)) seen.push(ch);
+  return seen.map(ch => SLOT_BY_LETTER[ch]);
+}
+
+function newProject() {
+  return { version: 1, settings: { ...DEFAULT_SETTINGS }, zones: {}, modillions: [], last_export: 0, last_export_count: 0 };
+}
+function applyTheme() { document.documentElement.classList.toggle("dark", !!project.settings.dark_mode); }
+function normNum(v) { v = String(v || "").trim(); return /^\d+$/.test(v) ? String(parseInt(v, 10)) : v; }
+function numKey(v) { const n = parseInt(v, 10); return Number.isFinite(n) ? n : 1e9; }
+function cmpMod(a, b) { return numKey(a.zone) - numKey(b.zone) || String(a.zone).localeCompare(String(b.zone)) || numKey(a.number) - numKey(b.number) || String(a.number).localeCompare(String(b.number)); }
+function newModillion(zone, number) {
+  return { id: uid(), zone, number, left: "", right: "", front: "", notes: "", comment_text: "", comment_photos: [], defects: [] };
+}
+function uid() { return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+/* ======================================================================
+   IndexedDB: "photos" (id -> {blob,w,h}) and "kv" (project)
+   ====================================================================== */
+const DB = (() => {
+  let db;
+  function open() {
+    if (db) return Promise.resolve(db);
+    return new Promise((res, rej) => {
+      const r = indexedDB.open("modillion-field", 1);
+      r.onupgradeneeded = () => { const d = r.result; d.createObjectStore("photos"); d.createObjectStore("kv"); };
+      r.onsuccess = () => { db = r.result; res(db); };
+      r.onerror = () => rej(r.error);
+    });
+  }
+  function tx(store, mode, fn) {
+    return open().then(d => new Promise((res, rej) => {
+      const t = d.transaction(store, mode); const s = t.objectStore(store); const req = fn(s);
+      t.oncomplete = () => res(req && req.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    }));
+  }
+  return {
+    getPhoto: id => tx("photos", "readonly", s => s.get(id)),
+    putPhoto: (id, rec) => tx("photos", "readwrite", s => s.put(rec, id)),
+    delPhoto: id => tx("photos", "readwrite", s => s.delete(id)),
+    allPhotoKeys: () => tx("photos", "readonly", s => s.getAllKeys()),
+    clearPhotos: () => tx("photos", "readwrite", s => s.clear()),
+    getKV: k => tx("kv", "readonly", s => s.get(k)),
+    putKV: (k, v) => tx("kv", "readwrite", s => s.put(v, k)),
+  };
+})();
+
+/* ======================================================================
+   Image helpers (EXIF orientation is applied by the browser when decoding)
+   ====================================================================== */
+function loadImage(blob) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(blob); const im = new Image();
+    im.onload = () => { URL.revokeObjectURL(url); res(im); };
+    im.onerror = e => { URL.revokeObjectURL(url); rej(e); };
+    im.src = url;
+  });
+}
+function canvasToBlob(c, q) { return new Promise(res => c.toBlob(res, "image/jpeg", q)); }
+async function resizeBlob(blob, maxPx, q, rotate = 0) {
+  const im = await loadImage(blob);
+  let w = im.naturalWidth, h = im.naturalHeight;
+  const sc = Math.min(1, maxPx / Math.max(w, h));
+  w = Math.round(w * sc); h = Math.round(h * sc);
+  const c = document.createElement("canvas");
+  const rot = ((rotate % 360) + 360) % 360;
+  if (rot === 90 || rot === 270) { c.width = h; c.height = w; } else { c.width = w; c.height = h; }
+  const ctx = c.getContext("2d");
+  ctx.translate(c.width / 2, c.height / 2); ctx.rotate(rot * Math.PI / 180); ctx.drawImage(im, -w / 2, -h / 2, w, h);
+  const out = await canvasToBlob(c, q);
+  return { blob: out, w: c.width, h: c.height };
+}
+async function storePhotoFile(file) {
+  const s = project.settings;
+  const rec = await resizeBlob(file, +s.store_px || 1600, +s.jpeg_quality || 0.8);
+  const id = uid() + ".jpg";
+  await DB.putPhoto(id, rec);
+  return id;
+}
+const urlCache = new Map();
+async function photoURL(id) {
+  if (!id) return "";
+  if (urlCache.has(id)) return urlCache.get(id);
+  const rec = await DB.getPhoto(id);
+  if (!rec) return "";
+  const u = URL.createObjectURL(rec.blob); urlCache.set(id, u); return u;
+}
+function forgetURL(id) { if (urlCache.has(id)) { URL.revokeObjectURL(urlCache.get(id)); urlCache.delete(id); } }
+
+/* ======================================================================
+   State
+   ====================================================================== */
+let project = newProject();
+let cur = 0;
+let saveTimer = null;
+
+async function loadState() {
+  const p = await DB.getKV("project");
+  if (p) { project = p; project.settings = { ...DEFAULT_SETTINGS, ...(p.settings || {}) }; }
+  const c = await DB.getKV("cur"); cur = Number.isInteger(c) ? c : 0;
+  if (!project.modillions.length) project.modillions.push(newModillion("1", "1"));
+  cur = Math.max(0, Math.min(cur, project.modillions.length - 1));
+}
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, 150);
+}
+function flushSave() { clearTimeout(saveTimer); saveTimer = null; DB.putKV("project", project); DB.putKV("cur", cur); }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && saveTimer) flushSave(); });
+window.addEventListener("pagehide", () => { if (saveTimer) flushSave(); });
+function M() { return project.modillions[cur]; }
+function label(m) { return `Z${m.zone}-${m.number}`; }
+function elName() { return project.settings.element_name || "Modillion"; }
+function defectList() {
+  return (project.settings.defects || "").split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+    const [a, b] = l.split("|"); return { label: (a || "").trim(), text: ((b || a) || "").trim() };
+  });
+}
+
+/* ======================================================================
+   UI plumbing
+   ====================================================================== */
+const $ = id => document.getElementById(id);
+function toast(msg, ms = 1800) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), ms); }
+function confirmBox(html, okText = "OK", danger = false) {
+  return new Promise(res => {
+    const box = $("overlayBox");
+    box.innerHTML = `<div style="margin-bottom:14px">${html}</div><div class="row" style="justify-content:flex-end"><button class="btn" id="ovCancel">Cancel</button><button class="btn ${danger ? "danger" : "primary"}" id="ovOk">${okText}</button></div>`;
+    $("overlay").classList.add("show");
+    $("ovCancel").onclick = () => { $("overlay").classList.remove("show"); res(false); };
+    $("ovOk").onclick = () => { $("overlay").classList.remove("show"); res(true); };   // box content stays until the next dialog, so callers can still read inputs
+  });
+}
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.toggle("active", s.id === "scr-" + name));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.scr === name));
+  if (name === "list") renderList();
+  if (name === "zones") renderZones();
+  if (name === "export") renderExport();
+  if (name === "settings") renderSettings();
+  $("hdrPos").textContent = name === "capture" ? "" : "";
+  document.querySelector("main").scrollTop = 0;
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => showScreen(b.dataset.scr));
+
+const SLOTS = [["left", "Left"], ["right", "Right"], ["front", "Front"]];
+const ICON_CAM = `<svg viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>`;
+const ICON_ROT = `<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>`;
+const ICON_LIB = `<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/></svg>`;
+const ICON_X = `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>`;
+
+/* ---------------------------- capture screen ---------------------------- */
+async function renderCapture() {
+  const m = M();
+  $("zone").value = m.zone; $("num").value = m.number;
+  $("notes").value = m.notes; $("ctext").value = m.comment_text;
+  $("elName").textContent = elName();
+  document.querySelectorAll(".elNamePl").forEach(e => e.textContent = elName().toLowerCase() + "s");
+  $("posText").textContent = `${cur + 1} of ${project.modillions.length}`;
+  $("hdrTitle").textContent = `${project.settings.project_name || "Field Report"} - Zone ${m.zone}, ${elName()} ${m.number}`;
+  $("btnPrev").disabled = cur === 0;
+  $("batchHint").textContent = `Selection order = ${slotOrder().map(([, n]) => n).join(", ")}. 6 photos = two ${elName().toLowerCase()}s, and so on.`;
+  checkDuplicate(); renderBackupLine();
+  $("btnNext").textContent = cur === project.modillions.length - 1 ? "Next (new) ›" : "Next ›";
+
+  const tiles = $("tiles"); tiles.innerHTML = "";
+  for (const [key, name] of slotOrder()) {
+    const id = m[key];
+    const d = document.createElement("div"); d.className = "tile" + (id ? " filled" : "");
+    const url = id ? await photoURL(id) : "";
+    d.innerHTML = `${url ? `<img src="${url}">` : `<div class="tap">${ICON_CAM}<span>${name}</span></div>`}
+      <span class="lbl">${name}</span>
+      <input type="file" accept="image/*" capture="environment" aria-label="${name} photo">
+      <div class="tools">
+        ${id ? `<button data-act="rot" title="Rotate">${ICON_ROT}</button>` : ""}
+        <label title="Choose from library">${ICON_LIB}<input type="file" accept="image/*" style="position:absolute;inset:0;opacity:0;font-size:0" data-lib="1"></label>
+        ${id ? `<button data-act="del" title="Remove">${ICON_X}</button>` : ""}
+      </div>`;
+    const camInput = d.querySelector("input[capture]");
+    camInput.onchange = () => camInput.files[0] && setSlot(key, camInput.files[0]);
+    const libInput = d.querySelector("input[data-lib]");
+    libInput.onchange = () => libInput.files[0] && setSlot(key, libInput.files[0]);
+    d.querySelectorAll("button").forEach(b => b.onclick = ev => { ev.preventDefault(); ev.stopPropagation(); b.dataset.act === "rot" ? rotateSlot(key) : clearSlot(key); });
+    tiles.appendChild(d);
+  }
+
+  const chips = $("chips"); chips.innerHTML = "";
+  for (const df of defectList()) {
+    const b = document.createElement("button"); b.className = "chip" + (m.defects.includes(df.label) ? " on" : ""); b.textContent = df.label;
+    b.onclick = () => toggleDefect(df);
+    chips.appendChild(b);
+  }
+
+  const cp = $("cphotos"); cp.innerHTML = "";
+  for (let i = 0; i < m.comment_photos.length; i++) {
+    const c = m.comment_photos[i];
+    const row = document.createElement("div"); row.className = "cphoto";
+    row.innerHTML = `<img src="${await photoURL(c.path)}"><span class="tag">${String.fromCharCode(65 + i)})</span>
+      <input type="text" placeholder="Caption" value="${escAttr(c.caption)}"><button class="btn" data-i="${i}" title="Remove">${ICON_X}</button>`;
+    row.querySelector("input").oninput = e => { c.caption = e.target.value; save(); };
+    row.querySelector("button").onclick = async () => { if (await confirmBox("Remove this comment photo?", "Remove", true)) { forgetURL(c.path); await DB.delPhoto(c.path); m.comment_photos.splice(i, 1); save(); renderCapture(); } };
+    cp.appendChild(row);
+  }
+}
+function escAttr(s) { return String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+
+async function setSlot(key, file) {
+  const m = M();
+  toast("Saving photo...", 4000);
+  try {
+    const old = m[key];
+    m[key] = await storePhotoFile(file);
+    if (!m.by) m.by = project.settings.operator || "";
+    if (!m.captured_at) m.captured_at = new Date().toISOString();
+    flushSave();
+    if (old) { forgetURL(old); await DB.delPhoto(old); }
+    toast(`${key[0].toUpperCase() + key.slice(1)} photo saved`);
+  } catch (e) { toast("Could not read that photo: " + e, 4000); }
+  renderCapture();
+}
+async function clearSlot(key) {
+  const m = M();
+  if (!m[key] || !(await confirmBox(`Remove the ${key} photo?`, "Remove", true))) return;
+  const old = m[key]; m[key] = ""; flushSave(); forgetURL(old); await DB.delPhoto(old); renderCapture();
+}
+async function rotatePhoto(id) {
+  const rec = await DB.getPhoto(id); if (!rec) return;
+  const out = await resizeBlob(rec.blob, 1e6, +project.settings.jpeg_quality || 0.8, 90);
+  await DB.putPhoto(id, out); forgetURL(id);
+}
+async function rotateSlot(key) { const m = M(); if (!m[key]) return; toast("Rotating..."); await rotatePhoto(m[key]); renderCapture(); }
+
+function toggleDefect(df) {
+  const m = M(); const i = m.defects.indexOf(df.label);
+  let lines = m.notes.split("\n");
+  if (i >= 0) { m.defects.splice(i, 1); lines = lines.filter(l => l.trim() !== df.text); }
+  else { m.defects.push(df.label); if (!lines.some(l => l.trim() === df.text)) { lines = lines.filter(l => l.trim()); lines.push(df.text); } }
+  m.notes = lines.join("\n"); $("notes").value = m.notes; save(); renderCapture();
+}
+
+$("zone").oninput = e => { M().zone = normNum(e.target.value); save(); renderHeaderOnly(); checkDuplicate(); };
+$("num").oninput = e => { M().number = normNum(e.target.value); save(); renderHeaderOnly(); checkDuplicate(); };
+$("zone").onblur = e => { e.target.value = M().zone; };
+$("num").onblur = e => { e.target.value = M().number; };
+function checkDuplicate() {
+  const m = M(); const others = project.modillions.filter(x => x !== m && x.zone === m.zone && x.number === m.number);
+  const w = $("dupWarn");
+  if (others.length) { w.style.display = "block"; w.textContent = `Another ${label(m)} already exists on this iPad (${others.length}). Check the List tab - one of them probably needs a different number.`; }
+  else w.style.display = "none";
+}
+function photoCount() {
+  let n = 0;
+  for (const m of project.modillions) { n += (m.left ? 1 : 0) + (m.right ? 1 : 0) + (m.front ? 1 : 0) + m.comment_photos.filter(c => c.path).length; }
+  return n;
+}
+function renderBackupLine() {
+  const el = $("backupLine"); const n = photoCount();
+  if (!n) { el.textContent = ""; return; }
+  const since = project.last_export ? Math.max(0, n - (project.last_export_photos || 0)) : n;
+  const ph = k => `${k} photo${k === 1 ? "" : "s"}`;
+  if (!project.last_export) el.textContent = `No backup yet (${ph(n)} taken). Be sure to export at end of shift.`;
+  else el.textContent = (since ? `Last backup ${ph(since)} ago.` : "Last backup is up to date.") + " Be sure to export at end of shift.";
+}
+function renderHeaderOnly() { const m = M(); $("hdrTitle").textContent = `${project.settings.project_name || "Field Report"} - Zone ${m.zone}, ${elName()} ${m.number}`; }
+$("notes").oninput = e => { M().notes = e.target.value; save(); };
+$("ctext").oninput = e => { M().comment_text = e.target.value; save(); };
+$("batchLib").onchange = async e => {
+  const files = [...e.target.files]; e.target.value = "";
+  if (!files.length) return;
+  await batchAssign(files);
+};
+async function batchAssign(files) {
+  // Files arrive in the order they were selected in the photo picker. The first three fill this
+  // modillion's tiles in screen order (e.g. Left, Front, Right); every further three become the
+  // next modillion (zone kept, number +1).
+  const order = slotOrder().map(([k]) => k);
+  const filled = order.filter(k => M()[k]);
+  if (filled.length && !(await confirmBox(`This ${elName().toLowerCase()} already has ${filled.length} photo${filled.length > 1 ? "s" : ""}. Replace ${filled.length > 1 ? "them" : "it"} with the first of the selected photos?`, "Replace"))) return;
+  let i = 0, made = 0;
+  toast(`Adding ${files.length} photos...`, 60000);
+  while (i < files.length) {
+    if (i > 0) {   // move to / create the next modillion
+      if (cur === project.modillions.length - 1) { const m = M(); project.modillions.push(newModillion(m.zone, nextNumber(m.number))); }
+      cur++;
+    }
+    const m = M();
+    for (const key of order) {
+      if (i >= files.length) break;
+      try {
+        const old = m[key];
+        m[key] = await storePhotoFile(files[i++]);
+        if (!m.by) m.by = project.settings.operator || "";
+        if (!m.captured_at) m.captured_at = new Date().toISOString();
+        if (old) { forgetURL(old); await DB.delPhoto(old); }
+      } catch (err) { toast("Could not read a photo: " + err, 4000); }
+    }
+    made++; flushSave();
+  }
+  await renderCapture();
+  toast(made > 1 ? `Filled ${made} ${elName().toLowerCase()}s - now on ${label(M())}` : "Photos added");
+}
+$("cphotoCam").onchange = async e => { for (const f of e.target.files) await addCommentPhoto(f); e.target.value = ""; };
+$("cphotoLib").onchange = async e => { for (const f of e.target.files) await addCommentPhoto(f); e.target.value = ""; };
+async function addCommentPhoto(file) {
+  toast("Saving photo...", 4000);
+  const id = await storePhotoFile(file);
+  M().comment_photos.push({ path: id, caption: "" }); flushSave(); await renderCapture(); toast("Comment photo added");
+}
+
+function nextNumber(n) { const v = parseInt(n, 10); return Number.isFinite(v) ? String(v + 1) : n; }
+$("btnNext").onclick = () => {
+  if (cur === project.modillions.length - 1) {
+    const m = M();
+    if (!m.left && !m.right && !m.front && !m.notes.trim()) { toast("Take at least one photo of this one first"); return; }
+    project.modillions.push(newModillion(m.zone, nextNumber(m.number)));
+  }
+  cur++; flushSave(); renderCapture(); document.querySelector("main").scrollTop = 0;
+};
+$("btnPrev").onclick = () => { if (cur > 0) { cur--; save(); renderCapture(); document.querySelector("main").scrollTop = 0; } };
+$("btnDelete").onclick = async () => {
+  const m = M();
+  if (!(await confirmBox(`Delete <b>${label(m)}</b> and its photos?`, "Delete", true))) return;
+  for (const id of [m.left, m.right, m.front, ...m.comment_photos.map(c => c.path)]) if (id) { forgetURL(id); await DB.delPhoto(id); }
+  project.modillions.splice(cur, 1);
+  if (!project.modillions.length) project.modillions.push(newModillion("1", "1"));
+  cur = Math.min(cur, project.modillions.length - 1); save(); renderCapture();
+};
+
+/* ---------------------------- list screen ---------------------------- */
+async function renderList() {
+  const list = $("list"); list.innerHTML = "";
+  let lastZone = null; let missing = 0;
+  const groups = groupByZone();
+  for (const [zone, items] of groups) {
+    const band = document.createElement("div"); band.className = "zoneband"; band.textContent = `Zone ${zone} - ${items.length} ${elName().toLowerCase()}${items.length === 1 ? "" : "s"}`; list.appendChild(band);
+    for (const { m, idx } of items) {
+      const d = document.createElement("div"); d.className = "item" + (idx === cur ? " cur" : "");
+      const ths = [];
+      for (const [k] of slotOrder()) ths.push(m[k] ? `<img src="${await photoURL(m[k])}">` : "<div></div>");
+      const miss = SLOTS.filter(([k]) => !m[k]).map(([, n]) => n);
+      if (miss.length) missing++;
+      d.innerHTML = `<div class="th">${ths.join("")}</div><div class="t"><b>${label(m)}</b>${miss.length ? `<span class="warn">missing ${miss.join(", ")}</span>` : `<span class="muted">${m.defects.length ? m.defects.join(", ") : (m.notes ? "notes" : "ok")}</span>`}</div>`;
+      d.onclick = () => { cur = idx; save(); renderCapture(); showScreen("capture"); };
+      list.appendChild(d);
+    }
+  }
+  const dup = duplicates();
+  $("listSummary").textContent = `${project.modillions.length} total` + (missing ? `, ${missing} with missing photos` : "") + (dup.length ? `, duplicate labels: ${dup.join(", ")}` : "");
+}
+function groupByZone() {
+  const map = new Map();
+  const order = project.modillions.map((m, idx) => ({ m, idx })).sort((a, b) => cmpMod(a.m, b.m));
+  order.forEach(({ m, idx }) => { if (!map.has(m.zone)) map.set(m.zone, []); map.get(m.zone).push({ m, idx }); });
+  return [...map.entries()];
+}
+function duplicates() {
+  const seen = new Set(), dup = new Set();
+  for (const m of project.modillions) { const l = label(m); if (seen.has(l)) dup.add(l); seen.add(l); }
+  return [...dup];
+}
+
+/* ---------------------------- zones screen ---------------------------- */
+async function renderZones() {
+  const wrap = $("zonesList"); wrap.innerHTML = "";
+  for (const [zone] of groupByZone()) {
+    const z = project.zones[zone] || (project.zones[zone] = { description: "", image: "", image_caption: "" });
+    const card = document.createElement("div"); card.className = "card zonecard";
+    const url = z.image ? await photoURL(z.image) : "";
+    card.innerHTML = `<h2 style="margin-top:0">Zone ${zone}</h2>
+      <label class="f">Intro sentence under the heading</label><textarea placeholder="Zone ${zone} is located on the south elevation and has 27 ${elName().toLowerCase()}s in total.">${escAttr(z.description)}</textarea>
+      <label class="f">Elevation / layout drawing (optional)</label>
+      <div class="row"><label class="btn">${url ? "Replace" : "Add"} drawing (camera)<input type="file" accept="image/*" capture="environment" data-k="cam"></label>
+      <label class="btn">From library<input type="file" accept="image/*" data-k="lib"></label>${url ? `<button class="btn danger" data-k="del">Remove</button>` : ""}</div>
+      ${url ? `<img class="zoneimg" src="${url}"><label class="f">Drawing caption</label><input type="text" value="${escAttr(z.image_caption)}" data-k="cap">` : ""}`;
+    card.querySelector("textarea").oninput = e => { z.description = e.target.value; save(); };
+    card.querySelectorAll("input[type=file]").forEach(inp => inp.onchange = async () => {
+      if (!inp.files[0]) return; toast("Saving drawing...", 4000);
+      const old = z.image; z.image = await storePhotoFile(inp.files[0]); if (old) { forgetURL(old); await DB.delPhoto(old); }
+      save(); renderZones();
+    });
+    const cap = card.querySelector("input[data-k=cap]"); if (cap) cap.oninput = e => { z.image_caption = e.target.value; save(); };
+    const del = card.querySelector("button[data-k=del]"); if (del) del.onclick = async () => { forgetURL(z.image); await DB.delPhoto(z.image); z.image = ""; save(); renderZones(); };
+    wrap.appendChild(card);
+  }
+}
+
+/* ---------------------------- settings screen ---------------------------- */
+function renderSettings() {
+  document.querySelectorAll("#settingsForm [data-s]").forEach(el => {
+    const v = project.settings[el.dataset.s];
+    if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? "";
+  });
+}
+$("btnSaveSettings").onclick = () => {
+  document.querySelectorAll("#settingsForm [data-s]").forEach(el => {
+    let v = el.type === "checkbox" ? el.checked : el.value;
+    if (el.type === "number") v = parseFloat(v);
+    project.settings[el.dataset.s] = v;
+  });
+  save(); applyTheme(); toast("Settings saved"); renderCapture();
+};
+
+/* ---------------------------- export screen ---------------------------- */
+let lastDoc = null;
+async function renderExport() {
+  const sel = $("genScope"); sel.innerHTML = `<option value="all">Whole report (all zones)</option>`;
+  for (const [zone, items] of groupByZone()) { const o = document.createElement("option"); o.value = zone; o.textContent = `Zone ${zone} only (${items.length})`; sel.appendChild(o); }
+  $("genResult").style.display = lastDoc ? "block" : "none";
+  try {
+    if (navigator.storage && navigator.storage.estimate) {
+      const e = await navigator.storage.estimate();
+      $("storageInfo").textContent = `Photos stored on this iPad: ${(e.usage / 1048576).toFixed(0)} MB` + (e.quota ? ` of ~${(e.quota / 1073741824).toFixed(1)} GB available` : "") + (project.last_export ? `. Last backup: ${new Date(project.last_export).toLocaleString()}` : ". No backup exported yet.");
+      if (e.quota && e.usage / e.quota > 0.8) toast("Storage is getting full - export and start a new project soon", 5000);
+    }
+  } catch (_) { }
+}
+$("btnGen").onclick = async () => {
+  const scope = $("genScope").value;
+  $("genProg").style.display = "block"; $("genResult").style.display = "none"; $("btnGen").disabled = true;
+  try {
+    const t0 = Date.now();
+    const blob = await buildDocx(project, scope === "all" ? null : scope, (d, t, msg) => { $("genBar").style.width = (100 * d / t) + "%"; $("genMsg").textContent = msg; });
+    const name = safeName(project.settings.project_name || "Modillion_Report") + (scope === "all" ? "" : `_Zone${scope}`) + ".docx";
+    lastDoc = { blob, name };
+    $("genInfo").textContent = `${name} - ${(blob.size / 1048576).toFixed(1)} MB, built in ${((Date.now() - t0) / 1000).toFixed(0)} s.`;
+    $("genResult").style.display = "block"; $("genMsg").textContent = "Done.";
+  } catch (e) { console.error(e); $("genMsg").textContent = "Error: " + (e.message || e); }
+  $("btnGen").disabled = false;
+};
+function safeName(s) { return s.replace(/[^\w\-]+/g, "_").replace(/^_+|_+$/g, "") || "Report"; }
+async function shareOrDownload(blob, name, mime) {
+  const file = new File([blob], name, { type: mime });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: name }); return; } catch (e) { if (e.name === "AbortError") return; }
+  }
+  download(blob, name);
+}
+function download(blob, name) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+$("btnShare").onclick = () => lastDoc && shareOrDownload(lastDoc.blob, lastDoc.name, DOCX_MIME);
+$("btnDownload").onclick = () => lastDoc && download(lastDoc.blob, lastDoc.name);
+
+$("btnExportZip").onclick = async () => {
+  $("zipProg").style.display = "block";
+  try {
+    const blob = await exportZip((d, t, msg) => { $("zipBar").style.width = (100 * d / t) + "%"; $("zipMsg").textContent = msg; });
+    const d = new Date(), pad = n => String(n).padStart(2, "0");
+    const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+    const name = safeName(project.settings.project_name || "Modillion") + "_" + safeName(project.settings.operator || "iPad") + "_" + stamp + ".zip";
+    $("zipMsg").textContent = `${name} - ${(blob.size / 1048576).toFixed(1)} MB`;
+    project.last_export = Date.now(); project.last_export_photos = photoCount(); flushSave();
+    await shareOrDownload(blob, name, "application/zip");
+  } catch (e) { $("zipMsg").textContent = "Error: " + (e.message || e); }
+};
+$("importZip").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  $("zipProg").style.display = "block";
+  try {
+    const n = await importZip(f, (d, t, msg) => { $("zipBar").style.width = (100 * d / t) + "%"; $("zipMsg").textContent = msg; });
+    $("zipMsg").textContent = `Imported ${n} ${elName().toLowerCase()}s.`; save(); renderExport(); renderCapture();
+  } catch (err) { $("zipMsg").textContent = "Import failed: " + (err.message || err); }
+};
+$("btnClear").onclick = async () => {
+  const n = project.modillions.filter(m => m.left || m.right || m.front).length;
+  if (!(await confirmBox(`<b>Erase the whole project (${n} ${elName().toLowerCase()}s with photos) from this iPad?</b><br>Export a project zip first if you want to keep it.<br><br>Type <b>ERASE</b> to confirm:<br><input type="text" id="eraseWord" autocapitalize="characters" style="margin-top:6px">`, "Erase everything", true))) return;
+  if (((document.getElementById("overlayBox").querySelector("#eraseWord") || {}).value || "").trim().toUpperCase() !== "ERASE") { toast("Not erased - you did not type ERASE", 3000); return; }
+  await DB.clearPhotos(); urlCache.forEach(u => URL.revokeObjectURL(u)); urlCache.clear();
+  project = newProject(); project.modillions.push(newModillion("1", "1")); cur = 0; save(); lastDoc = null;
+  renderCapture(); showScreen("capture"); toast("New project started");
+};
+
+/* ======================================================================
+   ZIP writer / reader (store + deflate-raw via Compression Streams)
+   ====================================================================== */
+const CRC_TABLE = (() => { const t = new Int32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c; } return t; })();
+function crc32(u8) { let c = -1; for (let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ -1) >>> 0; }
+async function deflateRaw(u8) {
+  if (typeof CompressionStream === "undefined") return null;
+  const cs = new CompressionStream("deflate-raw");
+  const w = cs.writable.getWriter(); w.write(u8); w.close();
+  return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+}
+async function inflateRaw(u8) {
+  const ds = new DecompressionStream("deflate-raw");
+  const w = ds.writable.getWriter(); w.write(u8); w.close();
+  return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+}
+const enc = new TextEncoder(), dec = new TextDecoder();
+function dosDateTime(d) { return { time: (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), date: ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate() }; }
+/** entries: [{name, data: Uint8Array, compress: bool}] -> Blob */
+async function makeZip(entries, progress) {
+  const parts = [], central = []; let offset = 0; const now = dosDateTime(new Date());
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i]; const nameB = enc.encode(e.name); const crc = crc32(e.data);
+    let data = e.data, method = 0;
+    if (e.compress) { const z = await deflateRaw(e.data); if (z && z.length < e.data.length) { data = z; method = 8; } }
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, method, true);
+    lh.setUint16(10, now.time, true); lh.setUint16(12, now.date, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true); lh.setUint32(22, e.data.length, true); lh.setUint16(26, nameB.length, true); lh.setUint16(28, 0, true);
+    parts.push(lh.buffer, nameB, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, method, true);
+    ch.setUint16(12, now.time, true); ch.setUint16(14, now.date, true); ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true);
+    ch.setUint32(24, e.data.length, true); ch.setUint16(28, nameB.length, true); ch.setUint32(42, offset, true);
+    central.push(ch.buffer, nameB);
+    offset += 30 + nameB.length + data.length;
+    if (progress && (i % 5 === 0)) progress(i + 1, entries.length);
+  }
+  const cdSize = central.reduce((a, b) => a + b.byteLength, 0);
+  const eocd = new DataView(new ArrayBuffer(22));
+  eocd.setUint32(0, 0x06054b50, true); eocd.setUint16(8, entries.length, true); eocd.setUint16(10, entries.length, true);
+  eocd.setUint32(12, cdSize, true); eocd.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, eocd.buffer], { type: "application/zip" });
+}
+/** Read a zip (as produced by us or any standard tool) -> [{name, data}] */
+async function readZip(blob) {
+  const buf = new Uint8Array(await blob.arrayBuffer()); const dv = new DataView(buf.buffer);
+  let eocd = buf.length - 22; while (eocd >= 0 && dv.getUint32(eocd, true) !== 0x06054b50) eocd--;
+  if (eocd < 0) throw new Error("Not a zip file");
+  const n = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true); const out = [];
+  for (let i = 0; i < n; i++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error("Bad zip central directory");
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), nlen = dv.getUint16(p + 28, true), elen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+    const name = dec.decode(buf.subarray(p + 46, p + 46 + nlen));
+    const lnlen = dv.getUint16(lho + 26, true), lelen = dv.getUint16(lho + 28, true);
+    const start = lho + 30 + lnlen + lelen; const raw = buf.subarray(start, start + csize);
+    let data;
+    if (method === 0) data = raw; else if (method === 8) data = await inflateRaw(raw); else throw new Error("Unsupported zip compression");
+    out.push({ name, data });
+    p += 46 + nlen + elen + clen;
+  }
+  return out;
+}
+
+/* ======================================================================
+   Project zip export / import (compatible with the desktop tool)
+   ====================================================================== */
+function niceName(m, suffix) { return `Z${m.zone}-${m.number}_${suffix}.jpg`.replace(/[^\w\-.]+/g, "_"); }
+async function exportZip(progress) {
+  const entries = []; const proj = { photo_dir: "photos", settings: { ...project.settings }, zones: {}, rotations: {}, modillions: [] };
+  delete proj.settings.defects; proj.settings.max_px = project.settings.report_px; proj.settings.assign_order = "LRF"; proj.settings.defect_labels = defectList().map(d => d.label);
+  const used = new Set(); let count = 0;
+  const addPhoto = async (id, name) => {
+    if (!id) return ""; let n = name, k = 1; while (used.has(n)) n = name.replace(/\.jpg$/, `_${++k}.jpg`); used.add(n);
+    const rec = await DB.getPhoto(id); if (!rec) return "";
+    entries.push({ name: "photos/" + n, data: new Uint8Array(await rec.blob.arrayBuffer()), compress: false }); return n;
+  };
+  const total = project.modillions.length;
+  for (const [zone, items] of groupByZone()) {
+    const z = project.zones[zone] || {};
+    proj.zones[zone] = { description: z.description || "", image: await addPhoto(z.image, `Zone${zone}_layout.jpg`), image_caption: z.image_caption || "" };
+    for (const { m } of items) {
+      const d = { zone: m.zone, number: m.number, left: await addPhoto(m.left, niceName(m, "Left")), right: await addPhoto(m.right, niceName(m, "Right")), front: await addPhoto(m.front, niceName(m, "Front")), notes: m.notes, comment_text: m.comment_text, comment_photos: [], defects: [...m.defects], by: m.by || project.settings.operator || "", captured_at: m.captured_at || "" };
+      for (let i = 0; i < m.comment_photos.length; i++) { const c = m.comment_photos[i]; d.comment_photos.push({ path: await addPhoto(c.path, niceName(m, "Comment" + String.fromCharCode(65 + i))), caption: c.caption }); }
+      proj.modillions.push(d); count++; if (progress) progress(count, total + 1, `Packing ${label(m)}...`);
+    }
+  }
+  entries.unshift({ name: "project.json", data: enc.encode(JSON.stringify(proj, null, 2)), compress: true });
+  if (progress) progress(total, total + 1, "Writing zip...");
+  return makeZip(entries);
+}
+async function importZip(file, progress) {
+  const files = await readZip(file);
+  const pj = files.find(f => /(^|\/)project\.json$/.test(f.name)); if (!pj) throw new Error("project.json not found in zip");
+  const base = pj.name.slice(0, pj.name.length - "project.json".length);
+  const proj = JSON.parse(dec.decode(pj.data));
+  const dir = (proj.photo_dir && !/^[A-Za-z]:|^\//.test(proj.photo_dir)) ? proj.photo_dir.replace(/\/+$/, "") + "/" : "photos/";
+  const byName = new Map(files.map(f => [f.name, f]));
+  const importPhoto = async rel => {
+    if (!rel) return ""; const f = byName.get(base + dir + rel) || byName.get(base + rel) || byName.get(dir + rel) || files.find(x => x.name.endsWith("/" + rel) || x.name === rel);
+    if (!f) return ""; const id = uid() + ".jpg";
+    const blob = new Blob([f.data], { type: "image/jpeg" });
+    let rec;
+    try { const im = await loadImage(blob); rec = { blob, w: im.naturalWidth, h: im.naturalHeight }; }   // keep the bytes as they are
+    catch (_) { rec = await resizeBlob(blob, +project.settings.store_px || 1600, +project.settings.jpeg_quality || 0.8); }
+    await DB.putPhoto(id, rec); return id;
+  };
+  let n = 0; const total = (proj.modillions || []).length;
+  for (const [zone, z] of Object.entries(proj.zones || {})) {
+    if (!project.zones[zone]) project.zones[zone] = { description: z.description || "", image: await importPhoto(z.image), image_caption: z.image_caption || "" };
+  }
+  const fresh = project.modillions.length === 1 && !project.modillions[0].left && !project.modillions[0].right && !project.modillions[0].front && !project.modillions[0].notes;
+  if (fresh) project.modillions = [];
+  const have = new Set(project.modillions.map(label));
+  const clashes = (proj.modillions || []).filter(d => have.has(`Z${d.zone}-${d.number}`)).map(d => `Z${d.zone}-${d.number}`);
+  let skipClashes = false;
+  if (clashes.length) {
+    skipClashes = await confirmBox(`<b>${clashes.length} ${elName().toLowerCase()}${clashes.length > 1 ? "s" : ""} in this zip already exist here:</b><br>${clashes.slice(0, 12).join(", ")}${clashes.length > 12 ? "..." : ""}<br><br><b>Skip</b> keeps what is on this iPad and imports only the others. <b>Cancel</b> imports everything (duplicates are flagged in the List tab so you can sort them out).`, "Skip duplicates");
+  }
+  for (const d of proj.modillions || []) {
+    if (skipClashes && have.has(`Z${d.zone}-${d.number}`)) continue;
+    const m = newModillion(String(d.zone), String(d.number));
+    m.by = d.by || ""; m.captured_at = d.captured_at || "";
+    m.left = await importPhoto(d.left); m.right = await importPhoto(d.right); m.front = await importPhoto(d.front);
+    m.notes = d.notes || ""; m.comment_text = d.comment_text || ""; m.defects = d.defects || [];
+    for (const c of d.comment_photos || []) { const id = await importPhoto(c.path); if (id) m.comment_photos.push({ path: id, caption: c.caption || "" }); }
+    project.modillions.push(m); n++; if (progress) progress(n, total, `Importing ${label(m)}...`);
+  }
+  if (!project.modillions.length) project.modillions.push(newModillion("1", "1"));
+  cur = Math.min(cur, project.modillions.length - 1);
+  return n;
+}
+
+/* ======================================================================
+   DOCX writer - mirrors the desktop tool's layout
+   ====================================================================== */
+const W_NS = `xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"`;
+function xesc(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+const EMU = 914400, DXA = 1440;
+function run(text, o = {}) {
+  const rpr = `${o.b ? "<w:b/>" : ""}${o.color ? `<w:color w:val="${o.color}"/>` : ""}${o.sz ? `<w:sz w:val="${o.sz}"/><w:szCs w:val="${o.sz}"/>` : ""}`;
+  return `<w:r>${rpr ? `<w:rPr>${rpr}</w:rPr>` : ""}<w:t xml:space="preserve">${xesc(text)}</w:t></w:r>`;
+}
+function para(runs, o = {}) {
+  const ppr = `${o.style ? `<w:pStyle w:val="${o.style}"/>` : ""}${o.keepNext ? "<w:keepNext/>" : ""}${o.spacing ? `<w:spacing ${o.spacing}/>` : ""}${o.jc ? `<w:jc w:val="${o.jc}"/>` : ""}`;
+  return `<w:p>${ppr ? `<w:pPr>${ppr}</w:pPr>` : ""}${runs}</w:p>`;
+}
+function textParas(text, o = {}) {
+  const lines = String(text || "").trim().split("\n"); if (!lines[0] && lines.length === 1) return para("", o);
+  return lines.map(l => para(run(l, { sz: o.sz || 22 }), o)).join("");
+}
+function pageBreak() { return `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`; }
+function drawing(rId, wIn, hIn, id) {
+  const cx = Math.round(wIn * EMU), cy = Math.round(hIn * EMU);
+  return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="Picture ${id}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="img${id}.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rId}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+}
+function tc(content, o = {}) {
+  const pr = `<w:tcW w:w="${Math.round(o.w * DXA)}" w:type="dxa"/>${o.span ? `<w:gridSpan w:val="${o.span}"/>` : ""}${o.fill ? `<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>` : ""}${o.valign ? `<w:vAlign w:val="${o.valign}"/>` : ""}`;
+  return `<w:tc><w:tcPr>${pr}</w:tcPr>${content || "<w:p/>"}</w:tc>`;
+}
+function tr(cells, o = {}) {
+  const pr = `${o.cantSplit ? "<w:cantSplit/>" : ""}${o.h ? `<w:trHeight w:val="${Math.round(o.h * DXA)}" w:hRule="${o.exact ? "exact" : "atLeast"}"/>` : ""}${o.header ? "<w:tblHeader/>" : ""}`;
+  return `<w:tr>${pr ? `<w:trPr>${pr}</w:trPr>` : ""}${cells.join("")}</w:tr>`;
+}
+function tbl(rows, cols, o = {}) {
+  const grid = cols.map(w => `<w:gridCol w:w="${Math.round(w * DXA)}"/>`).join("");
+  const borders = o.noBorders ? `<w:tblBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/><w:insideH w:val="nil"/><w:insideV w:val="nil"/></w:tblBorders>` : "";
+  return `<w:tbl><w:tblPr>${o.noBorders ? "" : `<w:tblStyle w:val="TableGrid"/>`}<w:tblW w:w="0" w:type="auto"/><w:jc w:val="center"/>${borders}<w:tblLayout w:type="fixed"/><w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/></w:tblPr><w:tblGrid>${grid}</w:tblGrid>${rows.join("")}</w:tbl>`;
+}
+function fit(w, h, maxW, maxH) { const s = Math.min(maxW / w, maxH / h); return [w * s, h * s]; }
+
+async function buildDocx(proj, zoneFilter, progress) {
+  const s = proj.settings; const name = s.element_name || "Modillion";
+  const contentW = 6.5, colW = 3.25;
+  const photoW = +s.photo_w_in || 3, photoH = +s.photo_h_in || 2, cphotoW = +s.comment_photo_w_in || 3;
+  const reportPx = +s.report_px || 1200, q = +s.jpeg_quality || 0.8;
+  let fig = parseInt(s.figure_start, 10) || 1, page = parseInt(s.page_start, 10) || 1;
+  const media = []; const rels = []; let picId = 1;
+  const groups = groupByZone().filter(([z]) => !zoneFilter || z === zoneFilter);
+  const total = groups.reduce((a, [, items]) => a + items.length, 0) + 2; let done = 0;
+
+  async function addImage(id) {
+    const rec = await DB.getPhoto(id); if (!rec) return null;
+    let { blob, w, h } = rec;
+    if (Math.max(w, h) > reportPx) ({ blob, w, h } = await resizeBlob(blob, reportPx, q));
+    const rId = `rIdImg${media.length + 1}`; const fname = `image${media.length + 1}.jpg`;
+    media.push({ name: fname, data: new Uint8Array(await blob.arrayBuffer()) });
+    rels.push(`<Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${fname}"/>`);
+    return { rId, w, h };
+  }
+  async function photoPara(id, maxW, maxH, jc = "center") {
+    const im = await addImage(id); if (!im) return { xml: para(run("[photo missing]", { sz: 18, color: "C00000" }), { jc }), ok: false };
+    const [fw, fh] = fit(im.w, im.h, maxW, maxH);
+    return { xml: para(drawing(im.rId, fw, fh, picId++), { jc, spacing: 'w:before="80" w:after="80"' }), ok: true };
+  }
+  const cap = (t, jc = "center") => para(run(t, { sz: 18 }), { jc, spacing: 'w:before="40" w:after="40"' });
+
+  /* ---- pass 1: page numbers & defect summary (computed, not rendered yet) ---- */
+  const pageOf = new Map(); let pg = page;
+  for (const [zone, items] of groups) { pg++; for (const { m } of items) { pageOf.set(m.id, pg); pg++; } }
+  if (s.include_summary) { /* summary table sits before the section start: page numbers above stay valid if page_start is the first modillion-section page */ }
+
+  const body = [];
+  /* ---- summary table ---- */
+  if (s.include_summary) {
+    const cw = [1.55, 1.75, 1.75, 1.45];
+    const hdr = tr(["Zone", name, "Defects", "Page Number"].map(t => tc(para(run(t, { b: true, color: "FFFFFF", sz: 24 }), { jc: "center" }), { w: 1.6, fill: "808080", valign: "center" })), { h: 0.4, header: true });
+    const rows = [hdr];
+    for (const [zone, items] of groups) {
+      rows.push(tr([tc(para(run(`Zone ${zone}`, { b: true, color: "FFFFFF", sz: 24 }), { jc: "center" }), { w: contentW, span: 4, fill: "BFBFBF", valign: "center" })], { h: 0.32 }));
+      const byDefect = new Map();
+      for (const { m } of items) for (const d of m.defects || []) { if (!byDefect.has(d)) byDefect.set(d, []); byDefect.get(d).push(m); }
+      if (!byDefect.size) rows.push(tr([tc(para(run("No defects recorded", { sz: 22, color: "808080" }), { jc: "center" }), { w: contentW, span: 4 })], { h: 0.35 }));
+      for (const [d, ms] of byDefect) {
+        const text = (defectList().find(x => x.label === d) || {}).text || d;
+        rows.push(tr([
+          tc(para(run(`Zone ${zone}`, { sz: 22 }), { jc: "center" }), { w: cw[0], valign: "center" }),
+          tc(para(run(ms.map(m => m.number).join(", "), { sz: 22 }), { jc: "center" }), { w: cw[1], valign: "center" }),
+          tc(para(run(text, { sz: 22 })), { w: cw[2], fill: "F2F2F2", valign: "center" }),
+          tc(para(run(ms.map(m => pageOf.get(m.id)).join(", "), { sz: 22 }), { jc: "center" }), { w: cw[3], valign: "center" }),
+        ], { h: 0.45, cantSplit: true }));
+      }
+    }
+    body.push(para(run("Table 1: Summary of major defects by zone", { sz: 18 }), { jc: "center", spacing: 'w:before="120" w:after="120"' }));
+    body.push(tbl(rows, cw));
+    body.push(pageBreak());
+  }
+  done++; if (progress) progress(done, total, "Summary table...");
+
+  /* ---- zones ---- */
+  let first = true; let zi = 0;
+  const allZones = groupByZone().map(([z]) => z);
+  for (const [zone, items] of groups) {
+    zi = allZones.indexOf(zone) + 1;
+    if (!first) body.push(pageBreak()); first = false;
+    const z = proj.zones[zone] || {};
+    const secNo = String(s.section_number || "").trim();
+    body.push(`<w:p><w:pPr><w:pStyle w:val="Heading2"/></w:pPr>${secNo ? `${run(`${secNo}.${zi}`)}<w:r><w:tab/></w:r>` : ""}${run(`Zone ${zone}:`)}</w:p>`);
+    if ((z.description || "").trim()) body.push(textParas(z.description));
+    if (z.image) {
+      const im = await addImage(z.image);
+      if (im) { const [fw, fh] = fit(im.w, im.h, contentW, 6); body.push(para(drawing(im.rId, fw, fh, picId++), { jc: "center" })); body.push(cap(`Figure ${fig++}: ${(z.image_caption || "").trim() || `Zone ${zone} layout.`}`)); }
+    }
+    for (const { m } of items) {
+      body.push(pageBreak());
+      const lbl = `Z${m.zone}-${m.number}`; const figs = {};
+      const rows = [];
+      rows.push(tr([tc(para(run(`Zone ${m.zone}: `, { color: "FFFFFF", sz: 28 }) + run(`${name} ${m.number}`, { b: true, color: "FFFFFF", sz: 28 }), { jc: "center" }), { w: contentW, span: 2, fill: "808080", valign: "center" })], { h: 0.42 }));
+      const order = slotOrder("report_layout");   // page layout (LRF = reference report), independent of the capture order
+      const P = {};
+      for (const [key] of order) { P[key] = m[key] ? await photoPara(m[key], photoW, photoH) : { xml: "<w:p/>", ok: false }; if (P[key].ok) figs[key] = fig++; }
+      const capFor = (key, label) => cap(figs[key] ? `Figure ${figs[key]}: ${name} ${lbl} ${label}` : `${name} ${lbl} ${label} (no photo)`);
+      const [[k1, n1], [k2, n2], [k3, n3]] = order;
+      rows.push(tr([tc(P[k1].xml, { w: colW, valign: "center" }), tc(P[k2].xml, { w: colW, valign: "center" })], { h: photoH + 0.15, cantSplit: true }));
+      rows.push(tr([tc(capFor(k1, n1), { w: colW }), tc(capFor(k2, n2), { w: colW })], { h: 0.22 }));
+      rows.push(tr([tc(P[k3].xml, { w: colW, valign: "center" }), tc(textParas(m.notes, { spacing: 'w:before="80"' }), { w: colW, valign: "top" })], { h: photoH + 0.15, cantSplit: true }));
+      rows.push(tr([tc(capFor(k3, n3), { w: colW }), tc(cap("Comments"), { w: colW })], { h: 0.22 }));
+      const cps = (m.comment_photos || []).filter(c => c.path);
+      const hasC = (m.comment_text || "").trim() || cps.length;
+      if (!hasC) rows.push(tr([tc("<w:p/>", { w: contentW, span: 2, fill: "D9D9D9" })], { h: 2.8, exact: true }));
+      else {
+        let inner = "";
+        if ((m.comment_text || "").trim()) inner += textParas(m.comment_text, { spacing: 'w:before="80"' });
+        if (cps.length) {
+          const per = cps.length <= 1 ? 1 : 2; const cwIn = per === 1 ? cphotoW : Math.min(cphotoW, colW - 0.25); const chIn = per === 1 ? 2.2 : 1.9;
+          const grows = []; let cells = [];
+          for (let k = 0; k < cps.length; k++) {
+            const c = cps[k]; const P = await photoPara(c.path, cwIn, chIn, "left");
+            let ct = (c.caption || "").trim(); const letter = String.fromCharCode(65 + (k % 26));
+            if (!ct) ct = `${letter})`; else if (!ct.toUpperCase().startsWith(letter + ")")) ct = `${letter}) ${ct}`;
+            const capX = P.ok ? para(run(`Figure ${fig++}: ${ct}`, { sz: 18 }), { jc: "left", spacing: 'w:after="80"' }) : "";
+            cells.push(tc(P.xml + capX, { w: contentW / per }));
+            if (cells.length === per || k === cps.length - 1) { while (cells.length < per) cells.push(tc("<w:p/>", { w: contentW / per })); grows.push(tr(cells)); cells = []; }
+          }
+          inner += tbl(grows, Array(per).fill(contentW / per), { noBorders: true }) + "<w:p/>";
+        }
+        rows.push(tr([tc(inner, { w: contentW, span: 2 })], { h: 2.8 }));
+      }
+      body.push(tbl(rows, [colW, colW]));
+      done++; if (progress) progress(done, total, `${lbl}...`);
+    }
+  }
+
+  const sect = `<w:sectPr><w:footerReference w:type="default" r:id="rIdFooter"/><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/><w:cols w:space="720"/><w:docGrid w:linePitch="360"/></w:sectPr>`;
+  const document = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${W_NS}><w:body>${body.join("")}${sect}</w:body></w:document>`;
+  const footer = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr ${W_NS}><w:p><w:pPr><w:pStyle w:val="Footer"/><w:pBdr><w:top w:val="single" w:sz="4" w:space="1" w:color="D9D9D9"/></w:pBdr><w:jc w:val="right"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:b/></w:rPr><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:rPr><w:b/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:b/></w:rPr><w:t>1</w:t></w:r><w:r><w:rPr><w:b/></w:rPr><w:fldChar w:fldCharType="end"/></w:r>${run(" | ", { b: true })}${run("P a g e", { color: "808080" })}</w:p><w:p><w:pPr><w:pStyle w:val="Footer"/></w:pPr>${run(s.report_id || "")}</w:p></w:ftr>`;
+  const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${W_NS}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Calibri" w:cs="Calibri"/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-US"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="160" w:line="259" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>
+<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:keepLines/><w:spacing w:before="240" w:after="80"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:rFonts w:ascii="Calibri Light" w:hAnsi="Calibri Light"/><w:color w:val="4E8A3E"/><w:sz w:val="32"/><w:szCs w:val="32"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:keepLines/><w:spacing w:before="160" w:after="80"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:rFonts w:ascii="Calibri Light" w:hAnsi="Calibri Light"/><w:color w:val="4E8A3E"/><w:sz w:val="26"/><w:szCs w:val="26"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Footer"><w:name w:val="footer"/><w:basedOn w:val="Normal"/><w:pPr><w:tabs><w:tab w:val="center" w:pos="4680"/><w:tab w:val="right" w:pos="9360"/></w:tabs><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:style>
+<w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style>
+<w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/><w:basedOn w:val="TableNormal"/><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:tblPr><w:tblBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:left w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:right w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="auto"/></w:tblBorders></w:tblPr></w:style></w:styles>`;
+  const docRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rIdFooter" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>${rels.join("")}</Relationships>`;
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`;
+  const now = new Date().toISOString().replace(/\.\d+Z$/, "Z");
+  const core = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${xesc(s.project_name || "")}</dc:title><dc:creator>Modillion Field Report</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`;
+  const app = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>Modillion Field Report</Application></Properties>`;
+
+  if (progress) progress(total - 1, total, "Writing file...");
+  const entries = [
+    { name: "[Content_Types].xml", data: enc.encode(contentTypes), compress: true },
+    { name: "_rels/.rels", data: enc.encode(rootRels), compress: true },
+    { name: "docProps/core.xml", data: enc.encode(core), compress: true },
+    { name: "docProps/app.xml", data: enc.encode(app), compress: true },
+    { name: "word/document.xml", data: enc.encode(document), compress: true },
+    { name: "word/styles.xml", data: enc.encode(styles), compress: true },
+    { name: "word/footer1.xml", data: enc.encode(footer), compress: true },
+    { name: "word/_rels/document.xml.rels", data: enc.encode(docRels), compress: true },
+    ...media.map(m => ({ name: "word/media/" + m.name, data: m.data, compress: false })),
+  ];
+  const blob = await makeZip(entries);
+  if (progress) progress(total, total, "Done");
+  return new Blob([blob], { type: DOCX_MIME });
+}
+
+/* ======================================================================
+   Boot
+   ====================================================================== */
+(async () => {
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (_) { }
+  await loadState();
+  applyTheme();
+  renderCapture();
+  // iOS: after the keyboard closes the page can stay scrolled up - reset it
+  document.addEventListener("focusout", () => setTimeout(() => { window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; }, 50));
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    navigator.serviceWorker.register("sw.js").catch(() => { });
+  }
+})();
+// expose for tests
+window.__app = { get project() { return project; }, get cur() { return cur; }, buildDocx, exportZip, importZip, renderCapture, setSlot, DB, showScreen };
+</script>
+</body>
+</html>
