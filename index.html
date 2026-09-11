@@ -269,7 +269,7 @@
 
 <script>
 "use strict";
-const VERSION = "1.3.0";
+const VERSION = "1.3.2";
 document.getElementById("ver").textContent = VERSION;
 
 /* ======================================================================
@@ -731,7 +731,7 @@ $("btnGen").onclick = async () => {
   try {
     const t0 = Date.now();
     const blob = await buildDocx(project, scope === "all" ? null : scope, (d, t, msg) => { $("genBar").style.width = (100 * d / t) + "%"; $("genMsg").textContent = msg; });
-    const name = safeName(project.settings.project_name || "Modillion_Report") + (scope === "all" ? "" : `_Zone${scope}`) + ".docx";
+    const name = buildFileName([project.settings.project_name || "Modillion_Report", contentTag(scope === "all" ? null : scope)], ".docx");
     lastDoc = { blob, name };
     $("genInfo").textContent = `${name} - ${(blob.size / 1048576).toFixed(1)} MB, built in ${((Date.now() - t0) / 1000).toFixed(0)} s.`;
     $("genResult").style.display = "block"; $("genMsg").textContent = "Done.";
@@ -739,6 +739,38 @@ $("btnGen").onclick = async () => {
   $("btnGen").disabled = false;
 };
 function safeName(s) { return s.replace(/[^\w\-]+/g, "_").replace(/^_+|_+$/g, "") || "Report"; }
+/** Content tag for file names, e.g. "Z1_M1-39" or "Z1_M1-39_Z2_M1-12" (many zones: "Z1-5_137mod"). Never throws. */
+function contentTag(zoneFilter) {
+  try {
+    const mods = project.modillions.filter(m => (m.left || m.right || m.front) && (!zoneFilter || m.zone === zoneFilter));
+    if (!mods.length) return "empty";
+    const zones = [...new Set(mods.map(m => String(m.zone)))].sort((a, b) => numKey(a) - numKey(b) || a.localeCompare(b));
+    const tagZone = z => {
+      const ms = mods.filter(m => String(m.zone) === z);
+      const nums = ms.map(m => parseInt(m.number, 10)).filter(Number.isFinite);
+      const zs = safeName("Z" + z);
+      if (nums.length !== ms.length || !nums.length) return `${zs}_${ms.length}mod`;   // non-numeric numbers
+      const lo = Math.min(...nums), hi = Math.max(...nums);
+      return lo === hi ? `${zs}_M${lo}` : `${zs}_M${lo}-${hi}`;
+    };
+    if (zones.length <= 3) return zones.map(tagZone).join("_");
+    const allNum = zones.every(z => /^\d+$/.test(z));
+    return (allNum ? `Z${zones[0]}-${zones[zones.length - 1]}` : `${zones.length}zones`) + `_${mods.length}mod`;
+  } catch (_) { return "export"; }
+}
+/** Keep file names comfortably inside every limit (iOS 255 bytes, OneDrive 255 chars,
+ *  Windows 260-char *path*): project name <= 40, operator <= 15, whole name <= 110 chars. */
+function buildFileName(parts, ext) {
+  const [proj, tag, ...rest] = parts;
+  let p = safeName(proj).slice(0, 40).replace(/_+$/, ""), t = tag;
+  const tail = rest.map(x => safeName(x)).join("_");
+  const MAX = 110 - ext.length;
+  let name = [p, t, tail].filter(Boolean).join("_");
+  if (name.length > MAX) { const room = Math.max(12, MAX - (p.length + 1) - (tail ? tail.length + 1 : 0)); t = t.slice(0, room).replace(/[_-]+$/, ""); name = [p, t, tail].filter(Boolean).join("_"); }
+  if (name.length > MAX) name = name.slice(0, MAX).replace(/[_-]+$/, "");
+  return name + ext;
+}
+function stampNow() { const d = new Date(), pad = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`; }
 async function shareOrDownload(blob, name, mime) {
   const file = new File([blob], name, { type: mime });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -758,9 +790,7 @@ $("btnExportZip").onclick = async () => {
   $("zipProg").style.display = "block";
   try {
     const blob = await exportZip((d, t, msg) => { $("zipBar").style.width = (100 * d / t) + "%"; $("zipMsg").textContent = msg; });
-    const d = new Date(), pad = n => String(n).padStart(2, "0");
-    const stamp = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
-    const name = safeName(project.settings.project_name || "Modillion") + "_" + safeName(project.settings.operator || "iPad") + "_" + stamp + ".zip";
+    const name = buildFileName([project.settings.project_name || "Modillion", contentTag(null), (project.settings.operator || "iPad").slice(0, 15), stampNow()], ".zip");
     $("zipMsg").textContent = `${name} - ${(blob.size / 1048576).toFixed(1)} MB`;
     project.last_export = Date.now(); project.last_export_photos = photoCount(); flushSave();
     await shareOrDownload(blob, name, "application/zip");

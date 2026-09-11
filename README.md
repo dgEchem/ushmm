@@ -109,9 +109,12 @@ report), photo sizes, and the quick-pick defect list (one per line:
   The line under the Next button shows when the last export was; export a project zip from the Report tab at the end of every shift,
   and save it somewhere off the device (OneDrive, Mail, a laptop).
 * **Two people on two iPads** - give each person whole zones. Set *Your name
-  or initials* in Settings on each iPad: exports are then named
-  `Project_Name_2026-09-12_0230.zip` (no two iPads produce the same file
-  name) and each modillion records who captured it. Combine either by
+  or initials* in Settings on each iPad: exports are then named like
+  `USHMM_Z1_M1-39_Z2_M1-12_Dave_2026-09-12_0230.zip` - the zones and
+  modillion ranges inside, who exported it, and when (no two iPads produce the
+  same file name). Word files are named the same way without the name/time.
+  With no internet, **AirDrop** the zip from one iPad to the other (share
+  sheet > AirDrop), then Import it and each modillion records who captured it. Combine either by
   importing one zip into the other iPad (Report > Import zip) or in the
   office with the desktop tool's *Merge...* button. If both people shot the
   same modillion number, the import asks whether to skip those or keep both.
