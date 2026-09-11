@@ -244,7 +244,7 @@
         <div style="flex:1"><label class="f">Photo size in the Word file (px)</label><input type="number" data-s="report_px"></div>
         <div style="flex:1"><label class="f">JPEG quality (0.5 - 0.95)</label><input type="number" step="0.05" data-s="jpeg_quality"></div>
       </div>
-      <p class="muted">1200 px at quality 0.8 is about 200 KB per photo (~60 MB for 100 <span class="elNamePl">modillions</span>). Lower the Word size or generate one zone at a time if files get too big for OneDrive.</p>
+      <p class="muted">Photos are saved once, at the stored size/quality, and go into the Word file unchanged when the Word size is the same (no second compression). 1600 px at 0.85 is roughly 300-400 KB per photo (~100 MB for 100 <span class="elNamePl">modillions</span>). Lower the Word size or generate one zone at a time if files get too big for OneDrive.</p>
     </details>
     <details style="margin-top:10px"><summary>Quick-pick defects</summary>
       <p class="muted">One per line: <code>Button label | Sentence inserted into the notes</code>. The label is what appears in the summary table.</p>
@@ -269,7 +269,7 @@
 
 <script>
 "use strict";
-const VERSION = "1.3.2";
+const VERSION = "1.3.3";
 document.getElementById("ver").textContent = VERSION;
 
 /* ======================================================================
@@ -297,8 +297,8 @@ const DEFAULT_SETTINGS = {
   page_start: 1,
   include_summary: true,
   store_px: 1600,
-  report_px: 1200,
-  jpeg_quality: 0.8,
+  report_px: 1600,
+  jpeg_quality: 0.85,
   defects: DEFAULT_DEFECTS,
   photo_w_in: 3.0, photo_h_in: 2.0, comment_photo_w_in: 3.0,
   operator: "",
@@ -883,7 +883,7 @@ async function readZip(blob) {
 function niceName(m, suffix) { return `Z${m.zone}-${m.number}_${suffix}.jpg`.replace(/[^\w\-.]+/g, "_"); }
 async function exportZip(progress) {
   const entries = []; const proj = { photo_dir: "photos", settings: { ...project.settings }, zones: {}, rotations: {}, modillions: [] };
-  delete proj.settings.defects; proj.settings.max_px = project.settings.report_px; proj.settings.assign_order = "LRF"; proj.settings.defect_labels = defectList().map(d => d.label);
+  delete proj.settings.defects; proj.settings.max_px = Math.max(+project.settings.store_px || 1600, +project.settings.report_px || 1600); proj.settings.jpeg_quality = 92; proj.settings.assign_order = "LRF"; proj.settings.defect_labels = defectList().map(d => d.label);
   const used = new Set(); let count = 0;
   const addPhoto = async (id, name) => {
     if (!id) return ""; let n = name, k = 1; while (used.has(n)) n = name.replace(/\.jpg$/, `_${++k}.jpg`); used.add(n);
